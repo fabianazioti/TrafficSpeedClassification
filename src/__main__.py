@@ -23,10 +23,10 @@ def classificarSinImagem():
         Detec_sinV.segmentacao_Cor()
         Detec_sinV.detectar_Circulo()
 
-        # if Detec_sinV.Posicao_circulos is not None:
-        #     Detec_sinV.regioesInteresse()
-        #
-        #     Detec_sinV.desenhaIMG()
+        if Detec_sinV.Posicao_circulos is not None:
+            Detec_sinV.regioes_Interesse()
+
+            # Detec_sinV.desenha_Resultado_IMG()
 
         Posicao_Atual += 1
 
