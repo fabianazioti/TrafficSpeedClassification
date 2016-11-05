@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import cv2.cv as cv
-#from classificarSin import ClassficacaoNum
+from MCS import ClassficacaoContorno
 from matplotlib import pyplot as plt
 from math import pow
 
@@ -12,14 +12,19 @@ FONTE = cv2.FONT_HERSHEY_PLAIN
 HSV = {
         'Hmin1' : 0,
         'Hmax1' : 10,
+
         'Smin1' : 50,
         'Smax1' : 255,
+
         'Vmin1' : 50,
         'Vmax1' : 255,
-        'Hmin2' : 160,
+
+        'Hmin2' : 150, # 160
         'Hmax2' : 179,
+
         'Smin2' : 50,
         'Smax2' : 255,
+
         'Vmin2' : 50,
         'Vmax2' : 255
 
@@ -52,13 +57,13 @@ HSV = {
 
 def verificar_Tamanho_Numero(candidato):
 
-    width, heigth = candidato[1]
-    if(heigth == 0 or width == 0):
+    largura, altura = candidato[1]
+    if(altura == 0 or largura == 0):
         return False
-    if(width >= 58 or heigth >= 60):
+    if(largura >= 58 or altura >= 60):
         return False
-    if( width <= 10 or heigth <= 15):
-        if(heigth >= 20):
+    if( largura <= 10 or altura <= 15):
+        if(altura >= 30):
             True
         else:
             return False
@@ -82,7 +87,7 @@ class Placa():
         self.Raio = raio
         self.contornos_Imagem()
 
-        #self.classifica()
+        self.classifica()
 
 
     def __repr__(self):
@@ -96,17 +101,21 @@ class Placa():
         # ------- Transformacao da Imagem para binario (utilizando a binarizacao otima) --- #
         self.Img = cv2.cvtColor(self.Img,cv2.COLOR_BGR2GRAY)
 
-        #self.img = cv2.equalizeHist(self.img)
+        # self.Img = cv2.equalizeHist(self.Img)
         blur = cv2.GaussianBlur(self.Img,(5,5),0)
         _, self.Img = cv2.threshold(blur, 0,255,cv2.THRESH_OTSU+cv2.THRESH_BINARY_INV)
 
-        kernel = np.ones((3,3),np.uint8)
-        self.Img = cv2.morphologyEx(self.Img, cv2.MORPH_OPEN, kernel)
+        kernel = np.ones((4,3),np.uint8)
+        self.Img = cv2.morphologyEx(self.Img, cv2.MORPH_OPEN, kernel, iterations =1)
+
+        plt.subplot(),plt.imshow(self.Img, cmap='gray'),plt.title('Numeros')
+        plt.show()
 
     def contornos_Imagem(self):
         self.processar_Imagem()
 
         self.contornos = []
+
         # -- Determina os contornos dentro da placa ---- #
 
         contournos,_ = cv2.findContours(self.Img, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
@@ -117,8 +126,8 @@ class Placa():
                 pass
             else:
                 xInicial,yInicial,w,h = cv2.boundingRect(cnt)
-                xFinal = (xInicial + w) + 2
-                yFinal = (yInicial + h) + 2
+                xFinal = (xInicial + w) + 1
+                yFinal = (yInicial + h) + 1
 
                 if(self.verificar_Posicao_Numero(xInicial, xFinal, yInicial, yFinal) == False):
                     pass
@@ -147,18 +156,16 @@ class Placa():
             return False
 
     def classifica(self):
-        print('Classificando')
         num = len(self.contornos) -1
         self.contornos.sort(key=getKey)
         self.valor = 0
 
         for cnt in self.contornos:
 
-            numberRoi = self.img_original[cnt[0][1]:cnt[1][1],cnt[0][0]:cnt[1][0]]
-            numero = ClassficacaoNum(numberRoi)
+            ROI = self.Img_original[cnt[0][1]:cnt[1][1],cnt[0][0]:cnt[1][0]]
+            numero = ClassficacaoContorno(ROI)
 
             maxX = numero.classificarN()
-
             self.valor = int(self.valor + maxX * pow(10,num))
             num = num - 1
 
@@ -179,7 +186,7 @@ class DetectarPlacas(object):
     def segmentacao_Cor(self):
         # -- Realiza a Segmenta da Cor vermelha -- #
 
-        self.Imagem = cv2.medianBlur(self.Imagem, 7)
+        self.Imagem = cv2.medianBlur(self.Imagem, 5)
         self.Imagem = cv2.cvtColor(self.Imagem, cv2.COLOR_BGR2HSV)
 
         menor_vermelho = np.array([HSV['Hmin1'], HSV['Smin1'], HSV['Vmin1']])
@@ -190,10 +197,14 @@ class DetectarPlacas(object):
 
         mask = cv2.inRange(self.Imagem, menor_vermelho, maior_vermelho)
         mask2 = cv2.inRange(self.Imagem, menor2_vermelho, maior2_vermelho)
-        self.Imagem = cv2.addWeighted(mask,1.0,mask2,1.0,0)
+        self.Imagem = cv2.addWeighted(mask,1.0,mask2,1.0,1)
 
-        kernel = np.ones((3,3),np.uint8)
-        self.Imagem= cv2.morphologyEx(self.Imagem, cv2.MORPH_OPEN, kernel)
+        kernel = np.ones((4,3),np.uint8)
+        self.Imagem= cv2.morphologyEx(self.Imagem, cv2.MORPH_OPEN, kernel, iterations = 1)
+
+
+        plt.subplot(),plt.imshow(self.Imagem, cmap='gray'),plt.title('Segmentacao apos')
+        plt.show()
 
     def detectar_Circulo(self):
         # -- Funcao responsavel por detectar circulos --- #
@@ -211,7 +222,7 @@ class DetectarPlacas(object):
     def regioes_Interesse(self):
 
         for (xCentro,yCentro,raio) in self.Posicao_circulos[0,:]:
-            raio += 3
+            raio += 2
             yInicial = (yCentro-raio)
             yFinal = (yCentro+raio)
             xInicial = (xCentro-raio)
@@ -222,12 +233,12 @@ class DetectarPlacas(object):
     def desenha_Resultado_IMG(self):
 
         for r in self.Regioes:
-            center = (int(r.posicao_x),int(r.posicao_y))
-            radius = int(r.raio)
+            center = (int(r.Posicao_x),int(r.Posicao_y))
+            radius = int(r.Raio)
 
-            cv2.circle(self.Imagem_original,center,radius,(0,255,0),3)
+            cv2.circle(self.Imagem_original, center,radius,(0,255,0),3)
 
-            cv2.putText(self.Imagem_original, str(r.valor),(r.posicao_x- r.raio, r.posicao_y- r.raio), FONTE, 5,(0,255,0),5,cv2.CV_AA)
+            cv2.putText(self.Imagem_original, str(r.valor),(r.Posicao_x- r.Raio, r.Posicao_y- r.Raio), FONTE, 5,(0,255,0),5,cv2.CV_AA)
         imgRGB = cv2.cvtColor(self.Imagem_original, cv2.COLOR_BGR2RGB)
         plt.subplot(),plt.imshow(imgRGB),plt.title('Numeros Detectados')
         plt.show()
