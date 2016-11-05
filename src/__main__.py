@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 from MDSV import DetectarPlacas
 
 def classificarSinImagem():
-    Numero_imagens = 1
+    Numero_imagens = 10
     Posicao_Atual = 1
 
     while Posicao_Atual <= Numero_imagens:
@@ -26,7 +26,7 @@ def classificarSinImagem():
         if Detec_sinV.Posicao_circulos is not None:
             Detec_sinV.regioes_Interesse()
 
-            # Detec_sinV.desenha_Resultado_IMG()
+            Detec_sinV.desenha_Resultado_IMG()
 
         Posicao_Atual += 1
 
