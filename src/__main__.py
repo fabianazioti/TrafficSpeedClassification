@@ -17,7 +17,7 @@ def classificarSinImagem():
     Posicao_Atual = 1
 
     while Posicao_Atual <= Numero_imagens:
-        caminhoImagem = '/home/fabiana/Documentos/IFSULDEMINAS/codigos/ProjetoTCCI/baseImgSinalizacao/velocidadeMaxima/%d.png'%Posicao_Atual
+        caminhoImagem = '/%d.png'%Posicao_Atual
         print '\n# ----------------- IMAGEM %d ------------------#\n'%Posicao_Atual
         Detec_sinV = DetectarPlacas(cv2.imread(caminhoImagem))
         Detec_sinV.segmentacao_Cor()
