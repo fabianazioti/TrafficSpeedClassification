@@ -87,7 +87,7 @@ class MultiLayerPerception(object):
 
         theta2_end = theta1_end + (self.Size_hidden + 1) * self.Size_output
         theta2 = np.reshape(params[theta1_end:theta2_end], \
-                            (self.Size_hidden + 1, self.Size_Output))
+                            (self.Size_hidden + 1, self.Size_output))
 
         return theta1, theta2
 
